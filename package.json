@@ -1,0 +1,24 @@
+{
+  "name": "cacheInitialization",
+  "version": "1.0.0",
+  "description": "A series of examples leading to a cache initialization pattern",
+  "main": "dist/naive.js",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "typescript": "^2.0.3"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "rm -rf dist",
+    "compile": "tsc",
+    "naive": "node dist/naive.js",
+    "protected": "node dist/protected.js",
+    "cacheClass": "node dist/cacheClass.js",
+    "decorated": "node dist/decorated.js",
+    "start": "npm run compile && npm run naive && npm run protected && npm run cacheClass && npm run decorated"
+  },
+  "keywords": [],
+  "author": "erykwarren",
+  "license": "ISC"
+}
