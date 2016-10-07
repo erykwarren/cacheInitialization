@@ -68,13 +68,7 @@ interface Response {
 }
 
 class MyClass {
-  domain: string;
-  numCalled: number;
-
-  constructor(domain: string) {
-    this.domain = domain;
-    this.numCalled = 0;
-  }
+  numCalled: number = 0;
 
   @cached('myType')
   async fetchSomething(variant: string): Promise<Response> {
@@ -90,7 +84,7 @@ class MyClass {
 
 
 async function runTest() {
-  const myObj = new MyClass('mydomain');
+  const myObj = new MyClass();
   const jobs = [];
 
   for(let i = 0; i < 100; i++) {
