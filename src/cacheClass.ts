@@ -1,22 +1,27 @@
+type FetchingFunction = () => Promise<any>;
 
 class Cache {
-  private store: { [key: string]: number } = {};
-  private activeFetches: { [key: string]: Promise<number> } = {};
+  private store: { [key: string]: any } = {};
+  private activeFetches: { [key: string]: Promise<any> } = {};
 
-  public async getValue(key: string, fetchFn): Promise<number> {
+  public async getValue(key: string, fetchFn: FetchingFunction): Promise<any> {
+    // already cached?
     const cached = this.store[key];
     if (cached) {
       return cached;
     }
+
+    // already fetching?
     const currentFetch = this.activeFetches[key];
-    if (!currentFetch) {
-      const fetch = this.activeFetches[key] = fetchFn();
-      const result = this.store[key] = await fetch;
-      delete this.activeFetches[key];
-      return result;
-    } else {
+    if (currentFetch) {
       return await currentFetch;
     }
+
+    // I'm the one fetching
+    const fetch = this.activeFetches[key] = fetchFn();
+    const result = this.store[key] = await fetch;
+    delete this.activeFetches[key];
+    return result;
   }
 }
 

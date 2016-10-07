@@ -35,17 +35,21 @@ namespace Protected {
    * if someone already launched the fetching process.
    */
   async function getSomething(): Promise<number> {
+    // already cached?
     if (cache) {
       return cache;
     }
-    if (!fetchingPromise) {
-      fetchingPromise = fetchSomething();
-      cache = await fetchingPromise;
-      fetchingPromise = undefined;
-      return cache;
-    } else {
+
+    // already fetching?
+    if (fetchingPromise) {
       return await fetchingPromise;
     }
+
+    // I'm the one fetching
+    fetchingPromise = fetchSomething();
+    cache = await fetchingPromise;
+    fetchingPromise = undefined;
+    return cache;
   }
 
   /**
