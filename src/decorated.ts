@@ -1,47 +1,57 @@
+// type FetchingFunction = () => Promise<any>;
 
+/**
+ * The Cache class
+ */
 class CentralCache {
   private store: { [key: string]: any } = {};
   private activeFetches: { [key: string]: Promise<any> } = {};
 
-  public async getValue(key: string, fetchFn, context, ...args): Promise<any> {
+  /**
+   * Compute a cache key from the given args
+   */
+  public static buildCacheKey(keyPrefix: string, args: string[]): string {
+    return [keyPrefix, ...args].join('-');
+  }
+
+  /**
+   * Fetching function wrapper
+   */
+  public async getValue(key: string, fetchFn: FetchingFunction, context, ...args): Promise<any> {
+    // already cached?
     const cached = this.store[key];
     if (cached) {
       return cached;
     }
+
+    // already fetching?
     const currentFetch = this.activeFetches[key];
-    if (!currentFetch) {
-      try {
-        const fetch = this.activeFetches[key] = fetchFn.apply(context, args);
-        const result = this.store[key] = await fetch;
-        delete this.activeFetches[key];
-        return result;
-      } catch (err) {
-        console.log(err);
-      }
-    } else {
+    if (currentFetch) {
       return await currentFetch;
     }
+
+    // I'm the one fetching
+    const fetch = this.activeFetches[key] = fetchFn.apply(context, args);
+    const result = this.store[key] = await fetch;
+    delete this.activeFetches[key];
+    return result;
   }
 }
 
+/**
+ * The global Cache object
+ */
 const globalCache = new CentralCache();
 
-interface CacheClient {
-  getCacheKey(keyType: string, ...args): string;
-}
-
-interface Response {
-  variant: string;
-  value: number;
-}
-
+/**
+ * The decorator
+ */
 function cached(keyType: string) {
-  return function (target: CacheClient, propertyKey: string, descriptor: PropertyDescriptor, ...rest) {
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
     const origFn = descriptor.value;
-    let run = 0;
     // don't use an => function here, or you lose access to 'this'
     const newFn = function (...args) {
-      const key = this.getCacheKey(keyType, ...args);
+      const key = CentralCache.buildCacheKey(keyType, args);
       return globalCache.getValue(key, origFn, this, ...args);
     };
     descriptor.value = newFn;
@@ -49,20 +59,21 @@ function cached(keyType: string) {
   };
 }
 
-class MyClass implements CacheClient {
+/**
+ * Testing code
+ */
+interface Response {
+  variant: string;
+  value: number;
+}
+
+class MyClass {
   domain: string;
   numCalled: number;
 
   constructor(domain: string) {
     this.domain = domain;
     this.numCalled = 0;
-  }
-
-  getCacheKey(keyType: string, ...args): string {
-    if (keyType === 'myType') {
-      return `${this.domain}-${keyType}-${args[0]}`;
-    }
-    return 'unknown';
   }
 
   async fetchSomething(variant: string): Promise<Response> {
