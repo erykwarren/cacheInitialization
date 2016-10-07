@@ -76,6 +76,7 @@ class MyClass {
     this.numCalled = 0;
   }
 
+  @cached('myType')
   async fetchSomething(variant: string): Promise<Response> {
     this.numCalled++;
     await new Promise(resolve => setTimeout(resolve,100));
@@ -83,11 +84,6 @@ class MyClass {
       variant: variant,
       value: 100 + parseInt(variant)
     };
-  }
-
-  @cached('myType')
-  getSomething(variant: string): Promise<number> {
-    return this.fetchSomething(variant);
   }
 }
 
@@ -99,7 +95,7 @@ async function runTest() {
 
   for(let i = 0; i < 100; i++) {
     const variant = i % 10;
-    jobs.push(myObj.getSomething(variant.toString()));
+    jobs.push(myObj.fetchSomething(variant.toString()));
   }
 
   const results = await Promise.all(jobs);
